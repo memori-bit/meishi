@@ -27,6 +27,7 @@ type WorkspaceMemberRow = {
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const { canManageWorkspace, loading: roleLoading } = useWorkspaceRole()
   const [format, setFormat] = useState<'hubspot' | 'salesforce'>('hubspot')
   const [fields, setFields] = useState<CustomField[]>([])
