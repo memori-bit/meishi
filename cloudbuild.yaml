@@ -1,5 +1,8 @@
 # Cloud Build 設定（Next.js ビルド用にメモリ増量・タイムアウト延長）
 # 使い方: deploy.sh から実行（.env の Firebase 変数がビルドに渡されます）
+# カスタムサービスアカウント使用時は options.logging が必要
+options:
+  logging: CLOUD_LOGGING_ONLY
 
 substitutions:
   _NEXT_PUBLIC_FIREBASE_API_KEY: ''
