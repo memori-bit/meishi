@@ -1,0 +1,16 @@
+# ローカル開発用 PostgreSQL（.env の DATABASE_URL に合わせてポート 5433）
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      # .env の DATABASE_URL に含まれるパスワードと一致させる
+      POSTGRES_PASSWORD: "&r+N[onEs;=4N1qe"
+      POSTGRES_DB: meishi-ocr-db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env*.local
+.DS_Store
+service-account.json
+*-service-account.json
+README.md
+.vscode
+.idea
+*.log
+coverage
+dist
+build
+

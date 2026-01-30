@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ユーザー情報
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usageDaily  UsageDaily[]
+  userPlan    UserPlan?
+  settings    UserSettings?
+
+  @@map("users")
+}
+
+// プラン種別
+enum Plan {
+  FREE
+  PRO
+  EXPO
+}
+
+// プランステータス
+enum PlanStatus {
+  ACTIVE
+  INACTIVE
+  TRIAL
+}
+
+// ユーザープラン
+model UserPlan {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_plans")
+}
+
+// 日次使用回数
+model UsageDaily {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @db.Date
+  count         Int      @default(0) // 基本使用回数
+  adBonusCount  Int      @default(0) // 広告視聴ボーナス回数
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("usage_daily")
+}
+
+// ユーザー設定（日程調整リンクなど）
+model UserSettings {
+  id                    String   @id @default(cuid())
+  userId                 String   @unique
+  scheduleLinkType       String?  // Spir/HubSpot/Timerex/Custom
+  scheduleLinkTemplate   String?  // リンクテンプレート
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// ワークスペース設定（オーナーごと、Firebase uid を workspaceId として使用）
+model WorkspaceSettings {
+  id           String   @id @default(cuid())
+  workspaceId  String   @unique @map("workspace_id") // オーナーの Firebase uid
+  maxMembers   Int      @default(5) @map("max_members") // 招待可能なメンバー数の上限
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("workspace_settings")
+}
+
+// ワークスペースメンバー（招待されたユーザー）
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String    @map("workspace_id") // オーナーの Firebase uid
+  memberUid   String?   @map("member_uid") // 招待されたユーザーの Firebase uid（ログイン後に設定）
+  memberEmail String    @map("member_email") // 招待時のメールアドレス
+  role        String    @default("member") // member のみ
+  expiresAt   DateTime? @map("expires_at") // 有効期限（null は無期限）
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, memberEmail])
+  @@map("workspace_members")
+}
+
+// EXPOリード提供同意ログ
+model ExpoLeadConsent {
+  id        String   @id @default(cuid())
+  userId    String
+  expoName  String
+  company   String
+  industry  String
+  role      String
+  painPoint String
+  createdAt DateTime @default(now())
+
+  @@map("expo_lead_consents")
+}
+
+// リード（名刺OCR結果）
+model Lead {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId  String?  @map("workspace_id")
+  companyName  String   @map("company_name")
+  personName   String   @map("person_name")
+  department   String?  @map("department")
+  title        String?  @map("title")
+  email        String?  @map("email")
+  phone        String?  @map("phone")
+  mobile       String?  @map("mobile")
+  postalCode   String?  @map("postal_code")
+  address      String?  @map("address")
+  website      String?  @map("website")
+  rawTextFront String?  @map("raw_text_front")
+  rawTextBack  String?  @map("raw_text_back")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  customFieldValues LeadCustomFieldValue[]
+
+  @@map("leads")
+}
+
+// カスタム項目（アンケート）
+model CustomField {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workspaceId String  @map("workspace_id")
+  label     String   @map("label")
+  type      String   @map("type") // text | radio | checkbox | select
+  options   String?  @map("options") // JSON string
+  createdAt DateTime @default(now()) @map("created_at")
+
+  values LeadCustomFieldValue[]
+
+  @@map("custom_fields")
+}
+
+// リードごとのカスタム項目値
+model LeadCustomFieldValue {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leadId    String   @db.Uuid @map("lead_id")
+  fieldId   String   @db.Uuid @map("field_id")
+  value     String?  @map("value") // text or JSON string
+  createdAt DateTime @default(now()) @map("created_at")
+
+  lead  Lead        @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  field CustomField @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@map("lead_custom_field_values")
+}

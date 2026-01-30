@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 名刺OCR MVP
 
-## Getting Started
+名刺撮影→OCR→確認/修正→リード保存→履歴表示までのMVP実装。
 
-First, run the development server:
+## 機能
+
+- 名刺撮影/アップロード（モバイル対応）
+- 自動OCR実行
+- OCR結果の表示・編集
+- OCR結果の確認・修正
+- リードDB保存
+- 履歴一覧/詳細表示
+
+## 技術スタック
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- Font Awesome
+- Google Cloud Vision API (OCR)
+- Prisma（将来のDB永続化用）
+
+## セットアップ
+
+### 1. 依存関係のインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数の設定
+
+`.env.local`ファイルを作成し、以下の環境変数を設定してください：
+
+```bash
+# Google Cloud Vision API（必須）
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account-key.json
+
+# その他の環境変数は .env.example を参照
+```
+
+### 3. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ブラウザで `http://localhost:3000/capture` を開いてください。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ディレクトリ構成
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  capture/           # 撮影/OC R/保存
+  history/           # 履歴一覧/詳細
+  settings/          # 設定（UIのみ）
+  api/
+    ocr/             # OCR API
+    leads/           # リードAPI
+    health/          # ヘルスチェック API
 
-## Learn More
+components/
+  widgets/           # ウィジェットコンポーネント
+  WidgetCard.tsx    # 共通ウィジェットカード
 
-To learn more about Next.js, take a look at the following resources:
+lib/
+  ocr/               # OCR処理
+  normalizers/       # 正規化ユーティリティ
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+types/
+  ocr.ts             # 型定義
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ウィジェット一覧
 
-## Deploy on Vercel
+1. **BusinessCardUploaderWidget** - 名刺撮影/アップロード
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API仕様
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### POST /api/ocr
+
+名刺画像からOCRを実行し、候補データを返す。
+
+**Request:**
+- `multipart/form-data`
+- `image`: File
+
+**Response:**
+```json
+{
+  "companyNameCandidate": "株式会社サンプル",
+  "personNameCandidate": "山田太郎",
+  "titleCandidate": "代表取締役",
+  "urlCandidate": "https://example.com",
+  "fields": {
+    "company_name": "株式会社サンプル",
+    "person_name": "山田太郎",
+    "department": "営業部",
+    "title": "部長",
+    "email": "taro@example.com",
+    "phone": "03-1234-5678",
+    "mobile": "090-1234-5678",
+    "address": "東京都...",
+    "website": "https://example.com"
+  }
+}
+```
+
+### POST /api/leads
+
+OCR結果をリードとして保存する。
+
+**Request:**
+```json
+{
+  "fields": {
+    "company_name": "株式会社サンプル",
+    "person_name": "山田太郎",
+    "department": "営業部",
+    "title": "部長",
+    "email": "taro@example.com",
+    "phone": "03-1234-5678",
+    "mobile": "090-1234-5678",
+    "address": "東京都...",
+    "website": "https://example.com"
+  },
+  "raw_text_front": "....",
+  "raw_text_back": "...."
+}
+```
+
+**Response:**
+```json
+{
+  "id": "uuid"
+}
+```
+
+### GET /api/leads
+
+履歴一覧（新しい順）
+
+### GET /api/leads/:id
+
+履歴詳細
+
+### GET /api/health
+
+ヘルスチェック。
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
+## 注意事項
+
+- 名刺画像は保存しない（DB/ストレージに保存しない）
+
+## ライセンス
+
+MIT
