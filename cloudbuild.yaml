@@ -61,6 +61,8 @@ steps:
       - 'GOOGLE_SEARCH_API_KEY=google-search-api-key:latest,GOOGLE_SEARCH_ENGINE_ID=google-search-engine-id:latest,OPENAI_API_KEY=openai-api-key:latest,NEXTAUTH_SECRET=nextauth-secret:latest,DATABASE_URL=database-url:latest'
       - '--set-env-vars'
       - 'NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1'
+      - '--add-cloudsql-instances'
+      - '${PROJECT_ID}:asia-northeast1:meishi-ocr-db'
       - '--service-account'
       - 'meishi-ocr-service@${PROJECT_ID}.iam.gserviceaccount.com'
 
