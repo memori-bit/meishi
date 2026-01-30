@@ -58,7 +58,7 @@ steps:
       - '--max-instances'
       - '10'
       - '--set-secrets'
-      - 'GOOGLE_SEARCH_API_KEY=google-search-api-key:latest,GOOGLE_SEARCH_ENGINE_ID=google-search-engine-id:latest,OPENAI_API_KEY=openai-api-key:latest,NEXTAUTH_SECRET=nextauth-secret:latest,DATABASE_URL=database-url:latest'
+      - 'GOOGLE_SEARCH_API_KEY=google-search-api-key:latest,GOOGLE_SEARCH_ENGINE_ID=google-search-engine-id:latest,OPENAI_API_KEY=openai-api-key:latest,NEXTAUTH_SECRET=nextauth-secret:latest,DATABASE_URL=database-url:latest,FIREBASE_PROJECT_ID=firebase-project-id:latest,FIREBASE_CLIENT_EMAIL=firebase-client-email:latest,FIREBASE_PRIVATE_KEY=firebase-private-key:latest'
       - '--set-env-vars'
       - 'NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1'
       - '--add-cloudsql-instances'
